@@ -3,8 +3,11 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![MCU](https://img.shields.io/badge/MCU-ESP32--C3FH4-green)](https://www.espressif.com/en/products/socs/esp32-c3)
 [![Framework](https://img.shields.io/badge/Framework-Arduino-orange)](https://www.arduino.cc/)
+[![Website](https://img.shields.io/badge/Website-GitHub%20Pages-brightgreen)](https://carl-debug2025.github.io/ESP32-C3-Laser-Engraver/)
 
 **中文 | [English](README_EN.md)**
+
+🌐 **项目主页**: [https://carl-debug2025.github.io/ESP32-C3-Laser-Engraver/](https://carl-debug2025.github.io/ESP32-C3-Laser-Engraver/)
 
 > **一体化微型激光雕刻机解决方案**
 >
