@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-C3 Laser Engraver - 一体化激光雕刻机</title>
+    <meta name="description" content="基于ESP32-C3的开源激光雕刻机，集成Web控制端，支持BLE蓝牙无线操作">
+    <meta name="keywords" content="ESP32-C3, 激光雕刻机, GRBL, Web Bluetooth, 开源硬件">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 60px 40px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .gallery img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+
+        .specs {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+
+        .specs h2 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .spec-table th,
+        .spec-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .spec-table th {
+            background: #667eea;
+            color: white;
+        }
+
+        .spec-table tr:hover {
+            background: #f1f3f5;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .resources {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+
+        .resources h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .resource-item {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .resource-item a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .resource-item a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            header {
+                padding: 40px 20px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 ESP32-C3 Laser Engraver</h1>
+            <p class="subtitle">一体化微型激光雕刻机 | 开源硬件 | Web控制</p>
+            <div class="badges">
+                <span class="badge">✓ GPLv3 开源</span>
+                <span class="badge">✓ ESP32-C3FH4</span>
+                <span class="badge">✓ BLE 蓝牙</span>
+                <span class="badge">✓ Web 控制</span>
+            </div>
+        </header>
+
+        <img src="hardware/images/product-front.jpg" alt="ESP32-C3 激光雕刻机成品" class="hero-image">
+
+        <div class="content">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">✨ 项目亮点</h2>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>一体化设计</h3>
+                    <p>告别模块化组装，PCB直接可用，集成A4988驱动，接线简单</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Web控制端</h3>
+                    <p>无需安装软件，浏览器直接控制，支持Chrome Web Bluetooth</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📡</div>
+                    <h3>BLE蓝牙</h3>
+                    <p>无线G代码传输，摆脱USB线缆束缚，支持实时状态监控</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>精确定位</h3>
+                    <p>106.67 steps/mm分辨率，42×42mm工作范围，适合精细雕刻</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <h3>ESP32-C3FH4</h3>
+                    <p>RISC-V单核160MHz，内置Flash，高性能低功耗</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📖</div>
+                    <h3>开源免费</h3>
+                    <p>GPLv3许可证，完整开源固件+硬件+软件，自由修改</p>
+                </div>
+            </div>
+
+            <h2 style="text-align: center; color: #667eea; margin: 60px 0 30px;">📸 硬件展示</h2>
+
+            <div class="gallery">
+                <img src="hardware/images/pcb_front.jpg" alt="PCB正面">
+                <img src="hardware/images/pcb_back.jpg" alt="PCB背面">
+            </div>
+
+            <div class="specs">
+                <h2>⚙️ 核心参数</h2>
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>数值</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>工作范围</td>
+                            <td>42×42 mm</td>
+                            <td>X/Y轴最大行程</td>
+                        </tr>
+                        <tr>
+                            <td>定位精度</td>
+                            <td>~0.01 mm</td>
+                            <td>理论分辨率</td>
+                        </tr>
+                        <tr>
+                            <td>最大速度</td>
+                            <td>3000 mm/min</td>
+                            <td>推荐 500-1000</td>
+                        </tr>
+                        <tr>
+                            <td>步进分辨率</td>
+                            <td>106.67 steps/mm</td>
+                            <td>20步/圈 × 16细分 ÷ 3mm</td>
+                        </tr>
+                        <tr>
+                            <td>主控芯片</td>
+                            <td>ESP32-C3FH4</td>
+                            <td>RISC-V 160MHz</td>
+                        </tr>
+                        <tr>
+                            <td>步进驱动</td>
+                            <td>A4988 × 2</td>
+                            <td>16细分模式</td>
+                        </tr>
+                        <tr>
+                            <td>激光功率</td>
+                            <td>250-500mW</td>
+                            <td>PWM控制，12-bit</td>
+                        </tr>
+                        <tr>
+                            <td>通信方式</td>
+                            <td>BLE / USB-CDC</td>
+                            <td>Nordic UART协议</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/Carl-debug2025/ESP32-C3-Laser-Engraver" class="btn">
+                    🔗 GitHub 仓库
+                </a>
+                <a href="https://github.com/Carl-debug2025/ESP32-C3-Laser-Engraver/blob/master/README.md" class="btn btn-secondary">
+                    📖 中文文档
+                </a>
+                <a href="https://github.com/Carl-debug2025/ESP32-C3-Laser-Engraver/blob/master/README_EN.md" class="btn btn-secondary">
+                    📖 English Docs
+                </a>
+            </div>
+
+            <div class="resources">
+                <h2>📚 快速开始</h2>
+                <div class="resource-grid">
+                    <div class="resource-item">
+                        <h3>📋 硬件清单</h3>
+                        <a href="hardware/bom.csv">查看物料清单</a>
+                    </div>
+                    <div class="resource-item">
+                        <h3>📐 原理图</h3>
+                        <a href="hardware/schematic.pdf">下载原理图</a>
+                    </div>
+                    <div class="resource-item">
+                        <h3>🔧 Gerber文件</h3>
+                        <a href="hardware/gerber/">PCB打样文件</a>
+                    </div>
+                    <div class="resource-item">
+                        <h3>💻 固件源码</h3>
+                        <a href="https://github.com/Carl-debug2025/ESP32-C3-Laser-Engraver/tree/master/Grbl_Esp32">查看代码</a>
+                    </div>
+                </div>
+            </div>
+
+            <h2 style="text-align: center; color: #667eea; margin: 60px 0 30px;">🙏 致谢</h2>
+            <p style="text-align: center; font-size: 1.1em; line-height: 1.8;">
+                本项目基于以下开源项目开发：
+            </p>
+            <ul style="list-style: none; text-align: center; font-size: 1.1em; line-height: 2;">
+                <li><a href="https://github.com/bdring/Grbl_Esp32" style="color: #667eea; text-decoration: none; font-weight: bold;">Grbl_ESP32</a> - Bart Dring</li>
+                <li><a href="https://github.com/gnea/grbl" style="color: #667eea; text-decoration: none; font-weight: bold;">Grbl</a> - Sungeun K. Jeon</li>
+                <li><a href="https://github.com/arkypita/LaserGRBL" style="color: #667eea; text-decoration: none; font-weight: bold;">LaserGRBL</a> - arkypita</li>
+            </ul>
+
+            <h2 style="text-align: center; color: #667eea; margin: 60px 0 30px;">📜 许可证</h2>
+            <p style="text-align: center; font-size: 1.1em;">
+                本项目遵循 <strong>GNU General Public License v3.0</strong> 许可证
+            </p>
+        </div>
+
+        <footer>
+            <p>© 2024 ESP32-C3 Laser Engraver | Created by <a href="https://github.com/Carl-debug2025">Carl-debug2025</a></p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                🌟 如果这个项目对你有帮助，请在 GitHub 上给一个 Star！
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
